@@ -1,6 +1,7 @@
 import timm
 import torch
 from torch import nn
+import lightning as L
 import transformers
 
 
@@ -57,3 +58,54 @@ class ProjectionHead(nn.Module):
         x = self.dropout(x)
         x += projected
         return self.layer_norm(x)
+
+
+class CLIPDualEncoderModel(L.LightningModule):
+    def __init__(
+        self,
+        image_encoder_alias: str,
+        text_encoder_alias: str,
+        image_encoder_pretrained: bool = True,
+        image_encoder_trainable: bool = True,
+        text_encoder_trainable: bool = True,
+        image_embedding_dims: int = 2048,
+        text_embedding_dims: int = 768,
+        projection_dims: int = 256,
+        dropout: float = 0.0,
+        temperature: float = 1.0,
+        weight_decay: float = 0.0,
+        head_lr: float = 1e-3,
+        image_encoder_lr: float = 1e-4,
+        text_encoder_lr: float = 1e-5,
+        lr_scheduler_patience: float = 1.0,
+        lr_scheduler_factor: float = 0.8,
+        *args,
+        **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.image_encoder = ImageEncoder(
+            model_name=image_encoder_alias,
+            pretrained=image_encoder_pretrained,
+            trainable=image_encoder_trainable,
+        )
+        self.text_encoder = TextEncoder(
+            model_name=text_encoder_alias, trainable=text_encoder_trainable
+        )
+        self.image_projection = ProjectionHead(
+            embedding_dim=image_embedding_dims,
+            projection_dim=projection_dims,
+            dropout=dropout,
+        )
+        self.text_projection = ProjectionHead(
+            embedding_dim=text_embedding_dims,
+            projection_dim=projection_dims,
+            dropout=dropout,
+        )
+        self.log_softmax = nn.LogSoftmax(dim=-1)
+        self.temperature = temperature
+        self.weight_decay = weight_decay
+        self.head_lr = head_lr
+        self.image_encoder_lr = image_encoder_lr
+        self.text_encoder_lr = text_encoder_lr
+        self.lr_scheduler_patience = lr_scheduler_patience
+        self.lr_scheduler_factor = lr_scheduler_factor

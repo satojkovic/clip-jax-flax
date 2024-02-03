@@ -3,6 +3,7 @@ import torch
 from torch import nn
 import lightning as L
 import transformers
+import torch.nn.functional as F
 
 
 class ImageEncoder(nn.Module):
@@ -109,3 +110,14 @@ class CLIPDualEncoderModel(L.LightningModule):
         self.text_encoder_lr = text_encoder_lr
         self.lr_scheduler_patience = lr_scheduler_patience
         self.lr_scheduler_factor = lr_scheduler_factor
+
+    def _compute_losses(self, image_embeddings, text_embeddings):
+        logits = (text_embeddings @ image_embeddings.T) / self.temperature
+        images_similarity = image_embeddings @ image_embeddings.T
+        texts_similarity = text_embeddings @ text_embeddings.T
+        targets = F.softmax(
+            (images_similarity + texts_similarity) / 2 * self.temperature, dim=-1
+        )
+        images_loss = (-targets.T * self.log_softmax(logits.T)).sum(1)
+        texts_loss = (-targets * self.log_softmax(logits)).sum(1)
+        return (images_loss + texts_loss) / 2.0

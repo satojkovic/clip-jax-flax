@@ -121,3 +121,12 @@ class CLIPDualEncoderModel(L.LightningModule):
         images_loss = (-targets.T * self.log_softmax(logits.T)).sum(1)
         texts_loss = (-targets * self.log_softmax(logits)).sum(1)
         return (images_loss + texts_loss) / 2.0
+
+    def foward(self, inputs):
+        image_features = self.image_encoder(inputs["image"])
+        text_features = self.text_encoder(
+            input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
+        )
+        image_embeddings = self.image_projection(image_features)
+        text_embeddings = self.text_projection(text_features)
+        return image_embeddings, text_embeddings

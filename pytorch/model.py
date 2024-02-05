@@ -130,3 +130,20 @@ class CLIPDualEncoderModel(L.LightningModule):
         image_embeddings = self.image_projection(image_features)
         text_embeddings = self.text_projection(text_features)
         return image_embeddings, text_embeddings
+
+    def configure_optimizers(self):
+        pass
+
+    def traininig_step(self, batch, *args, **kwargs):
+        image_embeddings, text_embeddings = self.forward(batch)
+        loss = self._compute_losses(image_embeddings, text_embeddings).mean()
+        train_loss = self.all_gather(loss)
+        self.log("train/loss", train_loss.mean())
+        return loss
+
+    def validation_step(self, batch, *args, **kwargs):
+        image_embeddings, text_embeddings = self.forward(batch)
+        loss = self._compute_losses(image_embeddings, text_embeddings).mean()
+        val_loss = self.all_gather(loss)
+        self.log("val/loss", val_loss.mean())
+        return loss

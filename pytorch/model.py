@@ -4,6 +4,8 @@ from torch import nn
 import lightning as L
 import transformers
 import torch.nn.functional as F
+from torch import optim
+import itertools
 
 
 class ImageEncoder(nn.Module):
@@ -132,7 +134,30 @@ class CLIPDualEncoderModel(L.LightningModule):
         return image_embeddings, text_embeddings
 
     def configure_optimizers(self):
-        pass
+        parameters = [
+            {"params": self.image_encoder.parameters(), "lr": self.image_encoder_lr},
+            {"params": self.text_encoder.parameters(), "lr": self.text_encoder_lr},
+            {
+                "params": itertools.chain(
+                    self.image_projection.parameters(),
+                    self.text_projection.parameters(),
+                ),
+                "lr": self.head_lr,
+                "weight_decay": self.weight_decay,
+            },
+        ]
+        optimizer = optim.Adam(parameters, weight_decay=self.weight_decay)
+        lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            patience=self.lr_scheduler_patience,
+            factor=self.lr_scheduler_factor,
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": lr_scheduler,
+            "monitor": "val/loss",
+        }
 
     def traininig_step(self, batch, *args, **kwargs):
         image_embeddings, text_embeddings = self.forward(batch)

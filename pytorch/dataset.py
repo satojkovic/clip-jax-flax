@@ -2,6 +2,7 @@ import torch
 from typing import Optional
 import albumentations as A
 from abc import abstractmethod
+import cv2
 
 
 class ImageRetrievalDataset(torch.utils.data.Dataset):
@@ -41,3 +42,15 @@ class ImageRetrievalDataset(torch.utils.data.Dataset):
     @abstractmethod
     def fetch_dataset(self):
         pass
+
+    def __len__(self):
+        return len(self.captions)
+
+    def __getitem__(self, index):
+        item = {key: values[index] for key, values in self.tokenized_captions.items()}
+        image = cv2.imread(self.image_files[index])
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = self.transforms(image=image)["image"]
+        item["image"] = torch.tensor(image).permute(2, 0, 1).float()
+        item["caption"] = self.captions[index]
+        return item

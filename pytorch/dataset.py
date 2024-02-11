@@ -54,3 +54,15 @@ class ImageRetrievalDataset(torch.utils.data.Dataset):
         item["image"] = torch.tensor(image).permute(2, 0, 1).float()
         item["caption"] = self.captions[index]
         return item
+
+
+class Flickr8kDataset(ImageRetrievalDataset):
+    def __init__(
+        self,
+        artifact_id: str,
+        tokenizer=None,
+        target_size: int | None = None,
+        max_length: int = 200,
+        lazy_loading: bool = False,
+    ) -> None:
+        super().__init__(artifact_id, tokenizer, target_size, max_length, lazy_loading)

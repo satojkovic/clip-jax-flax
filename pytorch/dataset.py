@@ -3,19 +3,21 @@ from typing import Optional
 import albumentations as A
 from abc import abstractmethod
 import cv2
+import pandas as pd
+import os
 
 
 class ImageRetrievalDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        artifact_id: str,
+        artifact_dir: str,
         tokenizer=None,
         target_size: Optional[int] = None,
         max_length: int = 200,
         lazy_loading: bool = False,
     ) -> None:
         super().__init__()
-        self.artifact_id = artifact_id
+        self.artifact_dir = artifact_dir
         self.target_size = target_size
         self.image_files, self.captions = self.fetch_dataset()
         self.lazy_loading = lazy_loading
@@ -59,10 +61,21 @@ class ImageRetrievalDataset(torch.utils.data.Dataset):
 class Flickr8kDataset(ImageRetrievalDataset):
     def __init__(
         self,
-        artifact_id: str,
+        artifact_dir: str,
         tokenizer=None,
         target_size: int | None = None,
         max_length: int = 200,
         lazy_loading: bool = False,
     ) -> None:
-        super().__init__(artifact_id, tokenizer, target_size, max_length, lazy_loading)
+        super().__init__(artifact_dir, tokenizer, target_size, max_length, lazy_loading)
+
+    def fetch_dataset(self):
+        annotations = pd.read_csv(self.artifact_dir, "captions.txt")
+        image_files = [
+            os.path.join(self.artifact_dir, "Images", image_file)
+            for image_file in annotations["image"].to_list()
+        ]
+        for image_file in image_files:
+            assert os.path.isfile(image_file)
+        captions = annotations["caption"].to_list()
+        return image_files, captions

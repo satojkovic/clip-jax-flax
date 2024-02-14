@@ -5,6 +5,7 @@ from abc import abstractmethod
 import cv2
 import pandas as pd
 import os
+from pytorch_lightning import LightningDataModule
 
 
 class ImageRetrievalDataset(torch.utils.data.Dataset):
@@ -79,3 +80,7 @@ class Flickr8kDataset(ImageRetrievalDataset):
             assert os.path.isfile(image_file)
         captions = annotations["caption"].to_list()
         return image_files, captions
+
+
+class ImageRetrievalDataModule(LightningDataModule):
+    pass

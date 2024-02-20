@@ -6,6 +6,7 @@ import cv2
 import pandas as pd
 import os
 from pytorch_lightning import LightningDataModule
+from transformers import AutoTokenizer
 
 
 class ImageRetrievalDataset(torch.utils.data.Dataset):
@@ -83,4 +84,28 @@ class Flickr8kDataset(ImageRetrievalDataset):
 
 
 class ImageRetrievalDataModule(LightningDataModule):
-    pass
+    def __init__(
+        self,
+        artifact_dir: str,
+        dataset_name: str,
+        val_split: float = 0.2,
+        tokenizer_alias: Optional[str] = None,
+        target_size: int = 224,
+        max_length: int = 100,
+        lazy_loading: bool = False,
+        train_batch_size: int = 16,
+        val_batch_size: int = 16,
+        num_workers: int = 4,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.artifact_dir = artifact_dir
+        self.dataset_name = dataset_name
+        self.val_split = val_split
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_alias)
+        self.target_size = target_size
+        self.max_length = max_length
+        self.lazy_loading = lazy_loading
+        self.train_batch_size = train_batch_size
+        self.val_batch_size = val_batch_size
+        self.num_workers = num_workers

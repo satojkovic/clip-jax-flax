@@ -7,6 +7,7 @@ import pandas as pd
 import os
 from pytorch_lightning import LightningDataModule
 from transformers import AutoTokenizer
+from torch.utils.data import random_split, DataLoader
 
 
 class ImageRetrievalDataset(torch.utils.data.Dataset):
@@ -109,3 +110,41 @@ class ImageRetrievalDataModule(LightningDataModule):
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.num_workers = num_workers
+
+    def prepare_data(self):
+        pass
+
+    @staticmethod
+    def split_data(dataset: ImageRetrievalDataset, val_split: float):
+        train_length = int((1 - val_split) * len(dataset))
+        val_length = len(dataset) - train_length
+        train_dataset, val_dataset = random_split(
+            dataset, lengths=[train_length, val_length]
+        )
+        return train_dataset, val_dataset
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        dataset = Flickr8kDataset(
+            artifact_dir=self.artifact_dir,
+            tokenizer=self.tokenizer,
+            target_size=self.target_size,
+            max_length=self.max_length,
+            lazy_loading=self.lazy_loading,
+        )
+        self.train_dataset, self.val_dataset = self.split_data(
+            dataset, val_split=self.val_split
+        )
+
+    def train_dataloader(self):
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.train_batch_size,
+            num_workers=self.num_workers,
+        )
+
+    def val_dataloder(self):
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.val_batch_size,
+            num_workers=self.num_workers,
+        )

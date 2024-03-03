@@ -31,7 +31,7 @@ class TextEncoder(nn.Module):
         super().__init__()
         self.model = transformers.AutoModel.from_pretrained(model_name)
 
-        for param in self.model.parameters:
+        for param in self.model.parameters():
             param.requires_grad = trainable
 
         self.target_token_idx = 0

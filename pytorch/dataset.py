@@ -73,7 +73,7 @@ class Flickr8kDataset(ImageRetrievalDataset):
         super().__init__(artifact_dir, tokenizer, target_size, max_length, lazy_loading)
 
     def fetch_dataset(self):
-        annotations = pd.read_csv(self.artifact_dir, "captions.txt")
+        annotations = pd.read_csv(os.path.join(self.artifact_dir, "captions.txt"))
         image_files = [
             os.path.join(self.artifact_dir, "Images", image_file)
             for image_file in annotations["image"].to_list()

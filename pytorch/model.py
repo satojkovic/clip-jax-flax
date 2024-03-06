@@ -1,7 +1,7 @@
 import timm
 import torch
 from torch import nn
-import lightning as L
+from pytorch_lightning import LightningModule
 import transformers
 import torch.nn.functional as F
 from torch import optim
@@ -63,7 +63,7 @@ class ProjectionHead(nn.Module):
         return self.layer_norm(x)
 
 
-class CLIPDualEncoderModel(L.LightningModule):
+class CLIPDualEncoderModel(LightningModule):
     def __init__(
         self,
         image_encoder_alias: str,
@@ -124,7 +124,7 @@ class CLIPDualEncoderModel(L.LightningModule):
         texts_loss = (-targets * self.log_softmax(logits)).sum(1)
         return (images_loss + texts_loss) / 2.0
 
-    def foward(self, inputs):
+    def forward(self, inputs):
         image_features = self.image_encoder(inputs["image"])
         text_features = self.text_encoder(
             input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
@@ -159,7 +159,7 @@ class CLIPDualEncoderModel(L.LightningModule):
             "monitor": "val/loss",
         }
 
-    def traininig_step(self, batch, *args, **kwargs):
+    def training_step(self, batch, *args, **kwargs):
         image_embeddings, text_embeddings = self.forward(batch)
         loss = self._compute_losses(image_embeddings, text_embeddings).mean()
         train_loss = self.all_gather(loss)

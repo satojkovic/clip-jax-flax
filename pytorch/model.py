@@ -172,3 +172,7 @@ class CLIPDualEncoderModel(LightningModule):
         val_loss = self.all_gather(loss)
         self.log("val/loss", val_loss.mean())
         return loss
+
+
+def fw_hook(module, input, output):
+    print(f"Shape of output to {module} is {output.shape}.")

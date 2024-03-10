@@ -156,7 +156,7 @@ class CLIPDualEncoderModel(LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": lr_scheduler,
-            "monitor": "val/loss",
+            "monitor": "train/loss",
         }
 
     def training_step(self, batch, *args, **kwargs):

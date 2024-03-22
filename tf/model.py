@@ -36,3 +36,6 @@ if __name__ == "__main__":
     image_encoder.summary()
 
     text_encoder = TextEncoder(text_encoder_alias="distilbert-base-uncased")
+    input_text = "This is an example text."
+    last_hidden_state = text_encoder(input_text)
+    print(f'last_hidden_state: {last_hidden_state.shape}')

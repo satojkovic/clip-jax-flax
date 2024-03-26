@@ -14,8 +14,10 @@ class ImageEncoder(tf.keras.Model):
     def call(self, x):
         inputs = self.image_processor(x, return_tensors='tf')
         outputs = self.model(**inputs)
-        last_hidden_state = outputs.last_hidden_state
-        return last_hidden_state
+        pooler_output = outputs.pooler_output
+        # [batch, feat_dim, 1, 1] => [batch, feat_dim]
+        pooler_output = tf.squeeze(pooler_output, [2, 3])
+        return pooler_output
 
 
 class TextEncoder(tf.keras.Model):
@@ -29,7 +31,7 @@ class TextEncoder(tf.keras.Model):
         encoded_input = self.tokenizer(text, return_tensors="tf")
         output = self.model(encoded_input)
         last_hidden_state = output.last_hidden_state
-        return last_hidden_state
+        return last_hidden_state[:, self.target_token_idx, :]
 
 
 if __name__ == "__main__":

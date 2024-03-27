@@ -34,6 +34,22 @@ class TextEncoder(tf.keras.Model):
         return last_hidden_state[:, self.target_token_idx, :]
 
 
+class ProjectionHead(tf.keras.Model):
+    def __init__(self, embedding_dim: int, projection_dim: int, dropout: float) -> None:
+        super().__init__()
+        self.projection = tf.keras.layers.Dense(projection_dim, activation='gelu')
+        self.fc = tf.keras.layers.Dense(projection_dim)
+        self.dropout = tf.keras.layers.Dropout(dropout)
+        self.layer_norm = tf.keras.layers.LayerNormalization()
+
+    def call(self, x):
+        projected = self.projection(x)
+        x = self.fc(projected)
+        x = self.dropout(x)
+        x += projected
+        return self.layer_norm(x)
+
+
 if __name__ == "__main__":
     image_encoder = ImageEncoder(image_encoder_alias="microsoft/resnet-50")
     dataset = load_dataset("huggingface/cats-image")
@@ -45,3 +61,10 @@ if __name__ == "__main__":
     input_text = "This is an example text."
     text_last_hidden_state = text_encoder(input_text)
     print(f'text last_hidden_state: {text_last_hidden_state.shape}')
+
+    image_embedding_dims = 2048
+    projection_dims = 256
+    dropout = 0.0
+    image_projection = ProjectionHead(image_embedding_dims, projection_dims, dropout)
+    x = image_projection(image_last_hidden_state)
+    print(f'image projection: {x.shape}')

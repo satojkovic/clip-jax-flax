@@ -35,7 +35,7 @@ class TextEncoder(tf.keras.Model):
 
 
 class ProjectionHead(tf.keras.Model):
-    def __init__(self, embedding_dim: int, projection_dim: int, dropout: float) -> None:
+    def __init__(self, projection_dim: int, dropout: float) -> None:
         super().__init__()
         self.projection = tf.keras.layers.Dense(projection_dim, activation='gelu')
         self.fc = tf.keras.layers.Dense(projection_dim)

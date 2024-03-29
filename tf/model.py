@@ -50,6 +50,23 @@ class ProjectionHead(tf.keras.Model):
         return self.layer_norm(x)
 
 
+class CLIPDualEncoderModel(tf.keras.Model):
+    def __init__(
+        self,
+        image_encoder_alias: str,
+        text_encoder_alias: str,
+        projection_dims: int = 256,
+        dropout: float = 0.0,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.image_encoder = ImageEncoder(image_encoder_alias)
+        self.text_encoder = TextEncoder(text_encoder_alias)
+        self.image_projection = ProjectionHead(projection_dim=projection_dims, dropout=dropout)
+        self.text_projection = ProjectionHead(projection_dim=projection_dims, dropout=dropout)
+
+
 if __name__ == "__main__":
     image_encoder = ImageEncoder(image_encoder_alias="microsoft/resnet-50")
     dataset = load_dataset("huggingface/cats-image")

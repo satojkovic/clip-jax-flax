@@ -23,13 +23,11 @@ class ImageEncoder(tf.keras.Model):
 class TextEncoder(tf.keras.Model):
     def __init__(self, text_encoder_alias="distilbert-base-uncased"):
         super().__init__()
-        self.tokenizer = DistilBertTokenizer.from_pretrained(text_encoder_alias)
         self.model = TFDistilBertModel.from_pretrained(text_encoder_alias)
         self.target_token_idx = 0
 
-    def call(self, text):
-        encoded_input = self.tokenizer(text, return_tensors="tf")
-        output = self.model(encoded_input)
+    def call(self, input_ids, attention_mask):
+        output = self.model(input_ids=input_ids, attention_mask=attention_mask)
         last_hidden_state = output.last_hidden_state
         return last_hidden_state[:, self.target_token_idx, :]
 
@@ -76,7 +74,11 @@ if __name__ == "__main__":
 
     text_encoder = TextEncoder(text_encoder_alias="distilbert-base-uncased")
     input_text = "This is an example text."
-    text_last_hidden_state = text_encoder(input_text)
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    encoded_input = tokenizer(input_text, return_tensors='tf')
+    text_last_hidden_state = text_encoder(
+        input_ids=encoded_input['input_ids'],
+        attention_mask=encoded_input['attention_mask'])
     print(f'text last_hidden_state: {text_last_hidden_state.shape}')
 
     image_embedding_dims = 2048

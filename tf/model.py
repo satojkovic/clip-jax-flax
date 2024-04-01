@@ -84,6 +84,6 @@ if __name__ == "__main__":
     image_embedding_dims = 2048
     projection_dims = 256
     dropout = 0.0
-    image_projection = ProjectionHead(image_embedding_dims, projection_dims, dropout)
+    image_projection = ProjectionHead(projection_dims, dropout)
     x = image_projection(image_last_hidden_state)
     print(f'image projection: {x.shape}')

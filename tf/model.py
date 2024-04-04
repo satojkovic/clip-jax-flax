@@ -67,7 +67,7 @@ class CLIPDualEncoderModel(tf.keras.Model):
     def call(self, inputs):
         image_features = self.image_encoder(inputs["image"])
         text_features = self.text_encoder(
-            input_ids=input["input_ids"], attention_mask=input["attention_mask"]
+            input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
         )
         image_embeddings = self.image_projection(image_features)
         text_embeddings = self.text_projection(text_features)

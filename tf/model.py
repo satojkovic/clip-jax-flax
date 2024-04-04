@@ -96,3 +96,16 @@ if __name__ == "__main__":
     image_projection = ProjectionHead(projection_dims, dropout)
     x = image_projection(image_last_hidden_state)
     print(f'image projection: {x.shape}')
+
+    clip_model = CLIPDualEncoderModel(
+        image_encoder_alias="microsoft/resnet-50",
+        text_encoder_alias="distilbert-base-uncased"
+    )
+    inputs = {
+        'image': image,
+        'input_ids': encoded_input['input_ids'],
+        'attention_mask': encoded_input['attention_mask'],
+    }
+    image_embeddings, text_embeddings = clip_model(inputs)
+    print(f'image_embeddings: {image_embeddings.shape}')
+    print(f'text_embeddings: {text_embeddings.shape}')

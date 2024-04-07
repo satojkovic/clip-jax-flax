@@ -48,6 +48,23 @@ class ProjectionHead(tf.keras.Model):
         return self.layer_norm(x)
 
 
+def clip_contrastive_loss(logits):
+    return tf.reduce_mean(
+        tf.keras.metrics.sparse_categorical_crossentropy(
+            y_true=tf.range(logits.shape[0]), y_pred=logits, from_logits=True
+        )
+    )
+
+
+def clip_loss_fn(image_embeddings, text_embeddings, temperature=1.0):
+    image_embeddings = tf.math.l2_normalize(image_embeddings, axis=1)
+    text_embeddings = tf.math.l2_normalize(text_embeddings, axis=1)
+    logits = tf.matmul(text_embeddings, image_embeddings, transpose_b=True) * tf.math.exp(temperature)
+    text_loss = clip_contrastive_loss(logits)
+    image_loss = clip_contrastive_loss(tf.transpose(logits))
+    return (text_loss + image_loss) / 2.0
+
+
 class CLIPDualEncoderModel(tf.keras.Model):
     def __init__(
         self,

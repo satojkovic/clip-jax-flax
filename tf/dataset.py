@@ -2,6 +2,12 @@ import pandas as pd
 import os
 import tensorflow as tf
 
+def train_val_split(dataset, val_ratio=0.2):
+    val_size = int(len(dataset) * val_ratio)
+    val_ds = dataset.take(val_size)
+    train_ds = dataset.skip(val_size)
+    return train_ds, val_ds
+
 
 if __name__ == '__main__':
     artifact_dir = 'data/flickr8k'
@@ -18,7 +24,6 @@ if __name__ == '__main__':
 
     dataset = tf.data.Dataset.from_tensor_slices((image_files, captions))
     dataset = dataset.shuffle(len(dataset))
-    val_size = int(len(dataset) * 0.2)
-    val_ds = dataset.take(val_size)
-    train_ds = dataset.skip(val_size)
+    train_ds, val_ds = train_val_split(dataset, val_ratio=0.2)
     print(f'train/val: {len(train_ds)}/{len(val_ds)}')
+

@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import tensorflow as tf
 
 
 if __name__ == '__main__':
@@ -15,3 +16,9 @@ if __name__ == '__main__':
     print(f'len(image_files): {len(image_files)}')
     print(f'len(captions): {len(captions)}')
 
+    dataset = tf.data.Dataset.from_tensor_slices((image_files, captions))
+    dataset = dataset.shuffle(len(dataset))
+    val_size = int(len(dataset) * 0.2)
+    val_ds = dataset.take(val_size)
+    train_ds = dataset.skip(val_size)
+    print(f'train/val: {len(train_ds)}/{len(val_ds)}')

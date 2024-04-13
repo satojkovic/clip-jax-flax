@@ -124,6 +124,28 @@ class CLIPDualEncoderModel(LightningModule):
         texts_loss = (-targets * self.log_softmax(logits)).sum(1)
         return (images_loss + texts_loss) / 2.0
 
+    def _compute_constrastive_losses(self, image_embeddings, text_embeddings):
+        def clip_contrastive_loss(logits):
+            # Generate y_true corresponding to the number of samples
+            y_true = torch.arange(logits.shape[0]).to(logits.device)  # Placement according to logits devices
+            # Calculate cross-entropy loss after converting from logits to probability distribution
+            loss = F.cross_entropy(logits, y_true, reduction='mean')
+            return loss
+
+        image_embeddings = torch.nn.functional.normalize(image_embeddings, p=2, dim=1)
+        text_embeddings = torch.nn.functional.normalize(text_embeddings, p=2, dim=1)
+        # Calculate logits
+        temperature = torch.tensor(self.temperature)
+        logits = torch.matmul(text_embeddings, image_embeddings.t()) * torch.exp(temperature)
+
+        # Calculate text_loss and image_loss
+        text_loss = clip_contrastive_loss(logits)
+        image_loss = clip_contrastive_loss(logits.t())  # Calculate image_loss using the transpose of logits
+
+        # Calculate and return loss
+        loss = (text_loss + image_loss) / 2.0
+        return loss
+
     def forward(self, inputs):
         image_features = self.image_encoder(inputs["image"])
         text_features = self.text_encoder(
@@ -161,14 +183,14 @@ class CLIPDualEncoderModel(LightningModule):
 
     def training_step(self, batch, *args, **kwargs):
         image_embeddings, text_embeddings = self.forward(batch)
-        loss = self._compute_losses(image_embeddings, text_embeddings).mean()
+        loss = self._compute_constrastive_losses(image_embeddings, text_embeddings).mean()
         train_loss = self.all_gather(loss)
         self.log("train/loss", train_loss.mean())
         return loss
 
     def validation_step(self, batch, *args, **kwargs):
         image_embeddings, text_embeddings = self.forward(batch)
-        loss = self._compute_losses(image_embeddings, text_embeddings).mean()
+        loss = self._compute_constrastive_losses(image_embeddings, text_embeddings).mean()
         val_loss = self.all_gather(loss)
         self.log("val/loss", val_loss.mean())
         return loss

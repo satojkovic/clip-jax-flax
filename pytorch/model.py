@@ -125,7 +125,7 @@ class CLIPDualEncoderModel(LightningModule):
         return (images_loss + texts_loss) / 2.0
 
     def _compute_constrastive_losses(self, image_embeddings, text_embeddings):
-        def clip_contrastive_loss(logits):
+        def ce_loss(logits):
             # Generate y_true corresponding to the number of samples
             y_true = torch.arange(logits.shape[0]).to(logits.device)  # Placement according to logits devices
             # Calculate cross-entropy loss after converting from logits to probability distribution
@@ -139,8 +139,8 @@ class CLIPDualEncoderModel(LightningModule):
         logits = torch.matmul(text_embeddings, image_embeddings.t()) * torch.exp(temperature)
 
         # Calculate text_loss and image_loss
-        text_loss = clip_contrastive_loss(logits)
-        image_loss = clip_contrastive_loss(logits.t())  # Calculate image_loss using the transpose of logits
+        text_loss = ce_loss(logits)
+        image_loss = ce_loss(logits.t())  # Calculate image_loss using the transpose of logits
 
         # Calculate and return loss
         loss = (text_loss + image_loss) / 2.0

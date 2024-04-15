@@ -132,8 +132,8 @@ class CLIPDualEncoderModel(LightningModule):
             loss = F.cross_entropy(logits, y_true, reduction='mean')
             return loss
 
-        image_embeddings = torch.nn.functional.normalize(image_embeddings, p=2, dim=1)
-        text_embeddings = torch.nn.functional.normalize(text_embeddings, p=2, dim=1)
+        image_embeddings = F.normalize(image_embeddings, p=2, dim=1)
+        text_embeddings = F.normalize(text_embeddings, p=2, dim=1)
         # Calculate logits
         temperature = torch.tensor(self.temperature)
         logits = torch.matmul(text_embeddings, image_embeddings.t()) * torch.exp(temperature)

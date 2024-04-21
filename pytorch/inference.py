@@ -28,7 +28,7 @@ if __name__ == '__main__':
     image_encoder_alias = "resnet50"
     text_encoder_alias = "distilbert-base-uncased"
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'mps'
     tokenizer = AutoTokenizer.from_pretrained(text_encoder_alias)
     label_tokens = tokenizer(
         text=clip_labels,
@@ -36,7 +36,7 @@ if __name__ == '__main__':
         truncation=True,
         max_length=max_length,
         return_tensors='pt').to(device)
-    print(label_tokens['input_ids'][0][:10])
+    print(f'label tokens: {label_tokens.keys()}')
 
     image = imagenette[0]['image']
     target_size = 224
@@ -47,11 +47,19 @@ if __name__ == '__main__':
         ]
     )
     image = transforms(image=np.array(image))['image']
-    image = torch.tensor(image).permute(2, 0, 1).float()
+    image = torch.tensor(image).permute(2, 0, 1).float().to(device)
+    image = image.unsqueeze(0)
     print(image.shape)
+
+    inputs = {key: value for key, value in label_tokens.items()}
+    inputs['image'] = image
 
     model = CLIPDualEncoderModel.load_from_checkpoint(
         args.ckpt_path,
         image_encoder_alias=image_encoder_alias,
         text_encoder_alias=text_encoder_alias)
     model.eval()
+
+    image_embeddings, text_embeddings = model(inputs)
+    print(f'image embeddings: {image_embeddings.shape}')
+    print(f'text embeddings: {text_embeddings.shape}')

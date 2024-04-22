@@ -5,6 +5,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 import albumentations as A
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
@@ -63,3 +64,11 @@ if __name__ == '__main__':
     image_embeddings, text_embeddings = model(inputs)
     print(f'image embeddings: {image_embeddings.shape}')
     print(f'text embeddings: {text_embeddings.shape}')
+
+    image_embeddings = image_embeddings.cpu().detach().numpy()
+    text_embeddings = text_embeddings.cpu().detach().numpy()
+    scores = np.dot(image_embeddings, text_embeddings.T)
+    print(scores.shape)
+
+    pred = np.argmax(scores)
+    print(f'pred: {labels[pred]}')

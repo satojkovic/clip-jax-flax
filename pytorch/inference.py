@@ -39,7 +39,9 @@ if __name__ == '__main__':
         return_tensors='pt').to(device)
     print(f'label tokens: {label_tokens.keys()}')
 
-    image = imagenette[0]['image']
+    image_idx = np.random.choice(len(imagenette))
+    image = imagenette[image_idx]['image']
+    image.show()
     target_size = 224
     transforms = A.Compose(
         [
@@ -72,3 +74,4 @@ if __name__ == '__main__':
 
     pred = np.argmax(scores)
     print(f'pred: {labels[pred]}')
+    print(f'gt: {labels[imagenette[image_idx]["label"]]}')

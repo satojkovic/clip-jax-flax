@@ -1,1 +1,1 @@
-# clip-jax-flax
+# clip-pytorch

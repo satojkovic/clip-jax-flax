@@ -147,13 +147,21 @@ class CLIPDualEncoderModel(LightningModule):
         return loss
 
     def forward(self, inputs):
-        image_features = self.image_encoder(inputs["image"])
-        text_features = self.text_encoder(
-            input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
-        )
-        image_embeddings = self.image_projection(image_features)
-        text_embeddings = self.text_projection(text_features)
+        image_embeddings = self.encode_image(inputs["image"])
+        text_embeddings = self.encode_text(inputs["input_ids"], inputs["attention_mask"])
         return image_embeddings, text_embeddings
+
+    def encode_text(self, input_ids, attention_mask):
+        text_features = self.text_encoder(
+            input_ids=input_ids, attention_mask=attention_mask
+        )
+        text_embeddings = self.text_projection(text_features)
+        return text_embeddings
+
+    def encode_image(self, image):
+        image_features = self.image_encoder(image)
+        image_embeddings = self.image_projection(image_features)
+        return image_embeddings
 
     def configure_optimizers(self):
         parameters = [

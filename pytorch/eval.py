@@ -39,6 +39,7 @@ def zeroshot_classifier(labels, templates, model, tokenizer, device, max_length=
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--ckpt_path', required=True, help='Path to ckpt.')
+    parser.add_argument('--ensemble', action='store_true', help='Use prompt ensembling')
     args = parser.parse_args()
 
     #
@@ -73,7 +74,8 @@ if __name__ == '__main__':
 
     # Prompt ensembling
     labels = imagenette.info.features['label'].names
-    zeroshot_weights = zeroshot_classifier(labels, imagenet_templates, model, tokenizer, device)
+    templates = imagenet_templates if args.ensemble else ['a photo of a {}']
+    zeroshot_weights = zeroshot_classifier(labels, templates, model, tokenizer, device)
 
     preds = {}
     for i in tqdm(range(len(imagenette))):

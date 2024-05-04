@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from imagenet_info import imagenet_classes, imagenet_templates
+from collections import OrderedDict
 
 
 def preproc_image(image, transforms, device):
@@ -34,6 +35,10 @@ def zeroshot_classifier(labels, templates, model, tokenizer, device, max_length=
         zeroshot_weights.append(text_embeddings)
     zeroshot_weights = np.stack(zeroshot_weights, axis=1)
     return zeroshot_weights
+
+
+def calc_acc(preds):
+    return 100. * sum(preds) / len(preds)
 
 
 if __name__ == '__main__':
@@ -89,11 +94,16 @@ if __name__ == '__main__':
         preds[i] = pred
 
     true_preds = []
+    true_preds_per_class = {i: [] for i in range(len(labels))}
     for i, label in enumerate(imagenette['label']):
         if i not in preds:
             continue
         if label == preds[i]:
             true_preds.append(1)
+            true_preds_per_class[label].append(1)
         else:
             true_preds.append(0)
-    print(f'Accuracy: {sum(true_preds) / len(true_preds)}')
+            true_preds_per_class[label].append(0)
+    print(f'Accuracy: {calc_acc(true_preds)}')
+    for label, preds in true_preds_per_class.items():
+        print(f'{labels[label]},{calc_acc(preds)}')
